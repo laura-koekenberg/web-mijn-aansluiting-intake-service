@@ -1,0 +1,87 @@
+openapi: 3.0.3
+info:
+  title: Integratieteam -> MijnAansluitingIntakeService -> Kostenindicatie en Locatieservice
+  description: openapi contract mijn aansluiting
+  version: 1.0.0
+
+servers:
+  - url: 'http://mijnaansluiting-intake-service-acc.web-dev.liander.nl'
+  - url: 'http://mijnaansluiting-intake-service-prd.web-dev.liander.nl'
+
+paths:
+  /api/intake/questions:
+    post:
+      description: post questions for grootverbruik aansluiting request.
+      operationId: postGvQuestions
+      tags:
+        - Questions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntakeRequest'
+      responses:
+        '200':
+          description: Successfully returned processed GV intake questions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntakeResponse'
+
+components:
+  schemas:
+    IntakeRequest:
+      type: object
+      required:
+        - serviceCode
+        - coordinates
+        - postalCode
+      properties:
+        serviceCode:
+          type: string
+          enum: [ WZ, VW, NW, BW ]
+        requestedCapacity:
+          type: string
+          enum: [ 3X160A, 100KVA,3X250A, 160KVA, 630KVA, 3X400A, 3X600A, 3X1000A, 1MVA, 2MVA, 5MVA ]
+        currentCapacity:
+          type: string
+          enum: [ 1X25A, 1X10A, 3X50A, 3X40A, 3x35A, 3x25A, 1X35A, 3x80A, 3X63A ]
+        coordinates:
+          $ref: '#/components/schemas/Coordinates'
+        postalCode:
+          type: string
+
+    IntakeResponse:
+      type: object
+      properties:
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnswersDto'
+
+    Coordinates:
+      type: object
+      required:
+        - latitude
+        - longitude
+        - codeSystem
+      properties:
+        latitude:
+          type: number
+        longitude:
+          type: number
+        codeSystem:
+          type: string
+          enum: [ WGS84, Anders ]
+
+    AnswersDto:
+      type: object
+      required:
+        - code
+        - value
+      properties:
+        code:
+          type: string
+        value:
+          type: string

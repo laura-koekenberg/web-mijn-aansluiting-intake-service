@@ -1,0 +1,198 @@
+openapi: 3.0.3
+info:
+  title: Klantdossier autorisatie server voor de klantdossier service.
+  description: Derde poging tot een OpenAPI API.
+  version: 1.0.0
+
+servers:
+  - url: 'http://klantdossier-autorisatie-service:8080'
+  - url: 'http://localhost:8080'
+
+paths:
+  /api/v1/authorisation/users/{userId}/cases:
+    get:
+      description: Get all authorised caseId's for {userId}.
+      operationId: getAllAuthorisedCases
+      tags:
+        - Authorisation
+      parameters:
+        - in: path
+          name: userId
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successfully got list of caseId's.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AllCaseIdsResponseDto'
+
+  /api/v1/authorisation/users/{userId}/cases/{caseId}:
+    parameters:
+      - in: path
+        name: userId
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: caseId
+        schema:
+          type: string
+        required: true
+    get:
+      description: Get true/false if {userId} is authorised for {caseId}.
+      operationId: getIsAuthorised
+      tags:
+        - Authorisation
+      responses:
+        '200':
+          description: Successfully got true or false if authorisation matched userId with caseId.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorisationResponseDto'
+    post:
+      description: Set {userId} authorised for {caseId}.
+      operationId: setIsAuthorised
+      tags:
+        - Authorisation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthoriserDto'
+      responses:
+        '200':
+          description: UserId was already authorised with caseId. Nothing happened.
+        '201':
+          description: Successfully authorised userId with caseId.
+    delete:
+      description: Delete {userId} authorisation for {caseId}.
+      operationId: deleteIsAuthorised
+      tags:
+        - Authorisation
+      responses:
+        '200':
+          description: Successfully deleted authorisation for userId with caseId.
+        '404':
+          description: No authorisation found for userId with caseId.
+
+  /api/v1/authorisation/users/{userId}/cases/{caseId}/owner:
+    parameters:
+      - in: path
+        name: userId
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: caseId
+        schema:
+          type: string
+        required: true
+    get:
+      description: Get true/false if {userId} is owner of {caseId}.
+      operationId: getIsCaseOwner
+      tags:
+        - Authorisation
+      responses:
+        '200':
+          description: Successfully got true or false if userIdAuthoriser with caseId matched authorisation role owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthoriserResponseDto'
+
+  /api/v1/authorisation/cases/{caseId}/users:
+    get:
+      description: Get all authorised users for {caseId}.
+      operationId: getAllAuthorisedUsers
+      tags:
+        - Authorisation
+      parameters:
+        - in: path
+          name: caseId
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successfully got list of authorised users with their roles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AllAuthorisedUsersResponseDto'
+
+
+# ------------------------
+
+components:
+  schemas:
+    AllCaseIdsResponseDto:
+      type: object
+      properties:
+        caseIds:
+          type: array
+          items:
+            type: string
+
+    AllAuthorisedUsersResponseDto:
+      type: object
+      required:
+        - authorisedUsers
+      properties:
+        authorisedUsers:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorisedUserDto'
+
+    AuthorisedUserDto:
+      type: object
+      required:
+        - userId
+        - userRole
+      properties:
+        userId:
+          type: string
+        userRole:
+          $ref: '#/components/schemas/AuthorisationRoleEnum'
+
+    AuthorisationResponseDto:
+      type: object
+      required:
+        - isAuthorised
+      properties:
+        isAuthorised:
+          type: boolean
+
+    AuthoriserDto:
+      type: object
+      required:
+        - userRoleToSet
+        - userId
+      properties:
+        userRoleToSet:
+          $ref: '#/components/schemas/AuthorisationRoleEnum'
+        userId:
+          type: string
+          description: userId van de authoriser
+          minLength: 5
+          maxLength: 50
+
+    AuthorisationRoleEnum:
+      type: string
+      description: rol van de user mbt de case
+      enum:
+        - USER
+        - OWNER
+        - ADMIN
+
+    AuthoriserResponseDto:
+      type: object
+      required:
+        - isOwner
+      properties:
+        isOwner:
+          type: boolean
